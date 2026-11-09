@@ -119,7 +119,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-android-nvst-
 
-      - name: Run Android tests and lint, build sideload release APK
+      - name: Run Android tests and build sideload release APK
         working-directory: android
         env:
           RELEASE_VERSION: ${{ steps.meta.outputs.version }}
@@ -128,10 +128,9 @@ jobs:
           # Opus's pinned CMake source requires the project's supported 3.22 toolchain.
           export CMAKE="$ANDROID_SDK_ROOT/cmake/3.22.1/bin/cmake"
           test -x "$CMAKE"
-          ./gradlew --no-daemon --stacktrace \
+          ./gradlew --no-daemon --max-workers=2 --stacktrace \
             -PandroidReleaseVersion="$RELEASE_VERSION" \
             :app:testDebugUnitTest \
-            :app:lintDebug \
             :app:assembleRelease
 
       - name: Sign and verify sideload release APK
@@ -227,6 +226,14 @@ jobs:
             android-release-notes.md
           if-no-files-found: error
           retention-days: 30
+
+      # Run lint alone after preserving the verified APK artifact.
+      - name: Run Android lint in an isolated Gradle invocation
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon --max-workers=1 --stacktrace :app:lintDebug
+
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3
