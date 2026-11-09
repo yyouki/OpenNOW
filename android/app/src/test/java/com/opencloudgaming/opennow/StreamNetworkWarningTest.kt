@@ -2,6 +2,7 @@ package com.opencloudgaming.opennow
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StreamNetworkWarningTest {
@@ -51,6 +52,43 @@ class StreamNetworkWarningTest {
         assertNull(
             streamNetworkWarning(
                 stats = StreamRuntimeStats(receivedFps = 120, decodedFps = 30, decodeMs = 35.0),
+            ),
+        )
+    }
+
+    @Test
+    fun decoderBacklogGetsDeviceAdviceInsteadOfAnInternetWarning() {
+        val stats = StreamRuntimeStats(
+            receivedFps = 60,
+            decodedFps = 40,
+            decodeMs = 18.0,
+        )
+
+        requireNotNull(streamPerformanceWarning(stats)).let { warning ->
+            assertEquals("device_video", warning.key)
+            assertTrue(warning.message.contains("device video path is falling behind"))
+            assertTrue(warning.message.contains("720p/60 FPS"))
+        }
+        assertNull(streamNetworkWarning(stats))
+    }
+
+    @Test
+    fun networkWarningKeepsPriorityOverDecoderAdvice() {
+        val stats = StreamRuntimeStats(
+            pingMs = 150,
+            receivedFps = 60,
+            decodedFps = 35,
+            decodeMs = 20.0,
+        )
+
+        assertEquals("latency", streamPerformanceWarning(stats)?.key)
+    }
+
+    @Test
+    fun gameLimitedIncomingFrameRateDoesNotTriggerDecoderAdvice() {
+        assertNull(
+            streamPerformanceWarning(
+                StreamRuntimeStats(receivedFps = 30, decodedFps = 30, decodeMs = 28.0),
             ),
         )
     }

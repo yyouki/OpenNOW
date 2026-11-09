@@ -41,6 +41,16 @@ Android translations live in `app/src/main/res/values-*/strings.xml`. The defaul
 
 Run `python3 scripts/check_translations.py` from this folder to check every supported language for missing strings and plurals, duplicate keys, empty values, and mismatched format arguments. Also run `npm --prefix ../opennow-stable run locales:check` and `./gradlew :app:processDebugResources` after translation changes.
 
+## Android 120 FPS and stability profile
+
+Android streaming is capped at **120 FPS** in this client. The 120 FPS option remains gated by the account's Ultimate entitlement; the Android display also needs a 120 Hz refresh mode, and the provider must accept the requested stream profile. The client selects a cadence-compatible display mode when one is available.
+
+For the Redmi 14C, keep the automatic recommendation as the starting point: **H.264, approximately 720p ultrawide, 60 FPS, and 18 Mbps**. This stays below the display's advertised 120 Hz ceiling to preserve decoder and GPU headroom. 120 FPS is an optional experiment, not the recommended default; if decoded FPS falls behind received FPS, return to 60 FPS.
+
+The in-stream performance notice distinguishes measured network problems (latency, packet loss, jitter) from a sustained device video-decoding backlog. When incoming video is healthy but decoding falls behind, it recommends reducing resolution/FPS and disabling sharpening rather than blaming the network. It does not silently change saved settings.
+
+For best results, use stable 5 GHz Wi-Fi, avoid competing downloads, keep the phone cool, and compare the in-app server latency and packet-loss measurements. Client-side changes cannot remove packet loss, provider congestion, regional availability limits, or server queues.
+
 ## Runtime Notes
 
 Settings > Advanced > Experiments includes **Slide + Direct click (experimental)**.

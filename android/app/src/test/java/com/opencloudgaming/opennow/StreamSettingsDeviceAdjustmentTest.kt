@@ -201,7 +201,7 @@ class StreamSettingsDeviceAdjustmentTest {
 
         val high = base.applyingStreamPreset(StreamPreset.High)
         assertEquals("3440x1440", high.resolution)
-        assertEquals(360, high.fps)
+        assertEquals(120, high.fps)
         assertEquals(75, high.maxBitrateMbps)
         assertFalse(high.enableL4S)
 
@@ -210,7 +210,7 @@ class StreamSettingsDeviceAdjustmentTest {
     }
 
     @Test
-    fun preservesUltimate360FpsAt5kForStableAndroidProfile() {
+    fun capsAndroidHighFrameRateAt120FpsForStableAndroidProfile() {
         val adjusted = StreamSettings(resolution = "5120x2880", aspectRatio = "16:9", fps = 360, codec = VideoCodec.AV1)
             .adjustedForDevice(
                 codecReport(
@@ -223,7 +223,7 @@ class StreamSettingsDeviceAdjustmentTest {
             )
 
         assertEquals("5120x2880", adjusted.resolution)
-        assertEquals(360, adjusted.fps)
+        assertEquals(120, adjusted.fps)
     }
 
     @Test
@@ -429,7 +429,7 @@ class StreamSettingsDeviceAdjustmentTest {
 
         assertEquals("5120x1440", adjusted.resolution)
         assertEquals("32:9", adjusted.aspectRatio)
-        assertEquals(240, adjusted.fps)
+        assertEquals(120, adjusted.fps)
         assertEquals(150, adjusted.maxBitrateMbps)
         assertEquals(VideoCodec.H264, adjusted.codec)
         assertEquals(ColorQuality.EightBit420, adjusted.colorQuality)
@@ -462,7 +462,7 @@ class StreamSettingsDeviceAdjustmentTest {
 
         assertEquals("5120x2160", adjusted.resolution)
         assertEquals("21:9", adjusted.aspectRatio)
-        assertEquals(240, adjusted.fps)
+        assertEquals(120, adjusted.fps)
         assertEquals(150, adjusted.maxBitrateMbps)
         assertEquals(VideoCodec.H265, adjusted.codec)
         assertEquals(ColorQuality.EightBit420, adjusted.colorQuality)

@@ -625,8 +625,19 @@ class StreamResolutionTest {
 
         assertEquals(60, requested.withFpsAllowed(SubscriptionInfo(membershipTier = "FREE"), null).fps)
         assertEquals(60, requested.withFpsAllowed(SubscriptionInfo(membershipTier = "PERFORMANCE"), null).fps)
-        assertEquals(360, requested.withFpsAllowed(SubscriptionInfo(membershipTier = "ULTIMATE"), null).fps)
-        assertEquals(360, maxStreamFpsFor(null, "ULTIMATE"))
+        assertEquals(120, requested.withFpsAllowed(SubscriptionInfo(membershipTier = "ULTIMATE"), null).fps)
+        assertEquals(120, maxStreamFpsFor(null, "ULTIMATE"))
+    }
+
+    @Test
+    fun android120FpsRequiresUltimateAndUsesNativeHighFrameRateMode() {
+        val requested = StreamSettings(fps = 120)
+
+        assertEquals(60, requested.withFpsAllowed(SubscriptionInfo(membershipTier = "PERFORMANCE"), null).fps)
+        val ultimate = requested.withFpsAllowed(SubscriptionInfo(membershipTier = "ULTIMATE"), null)
+
+        assertEquals(120, ultimate.fps)
+        assertTrue(ultimate.requiresNativeDesktopCloudMatchMode())
     }
 
     @Test
@@ -639,7 +650,7 @@ class StreamResolutionTest {
             freeRequested.withFpsAllowed(SubscriptionInfo(membershipTier = "FREE"), null),
         )
         assertEquals(
-            ultimateRequested,
+            ultimateRequested.copy(fps = 120),
             ultimateRequested.withFpsAllowed(SubscriptionInfo(membershipTier = "ULTIMATE"), null),
         )
     }
@@ -665,7 +676,7 @@ class StreamResolutionTest {
                 )
                 assertEquals(
                     "Ultimate ${option.value} $codec",
-                    requested,
+                    requested.copy(fps = 120),
                     requested.withFpsAllowed(ultimateSubscription, null),
                 )
             }
@@ -720,9 +731,9 @@ class StreamResolutionTest {
         val requested = StreamSettings(resolution = "5120x2880", aspectRatio = "16:9", fps = 360)
 
         assertEquals(true, fiveK.isAvailableFor(incompleteSubscription, "ULTIMATE"))
-        assertEquals(360, maxStreamFpsFor(incompleteSubscription, "ULTIMATE"))
+        assertEquals(120, maxStreamFpsFor(incompleteSubscription, "ULTIMATE"))
         assertEquals(
-            requested,
+            requested.copy(fps = 120),
             requested
                 .withResolutionAllowed(incompleteSubscription, "ULTIMATE")
                 .withFpsAllowed(incompleteSubscription, "ULTIMATE"),

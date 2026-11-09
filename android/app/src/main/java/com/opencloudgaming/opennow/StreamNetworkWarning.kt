@@ -49,6 +49,29 @@ internal fun streamNetworkWarning(
 }
 
 /** Requires a sustained problem and shows at most one connection banner per stream session. */
+/**
+ * Separates device-side decode pressure from network quality. Network measurements take
+ * priority so a local decoder slowdown is not incorrectly blamed on the internet connection.
+ */
+internal fun streamPerformanceWarning(stats: StreamRuntimeStats): StreamNetworkWarning? {
+    streamNetworkWarning(stats)?.let { return it }
+
+    val receivedFps = stats.receivedFps?.takeIf { it >= 50 } ?: return null
+    val decodedFps = stats.decodedFps?.takeIf { it >= 0 } ?: return null
+    val decodeMs = stats.decodeMs?.takeIf { it.isFinite() && it >= 0.0 } ?: return null
+    val frameBudgetMs = 1_000.0 / receivedFps.toDouble()
+    val decoderIsFallingBehind = decodedFps <= receivedFps * 0.75 &&
+        decodeMs >= maxOf(12.0, frameBudgetMs * 0.85)
+    if (!decoderIsFallingBehind) return null
+
+    return StreamNetworkWarning(
+        key = "device_video",
+        message = "$decodedFps FPS decoded from $receivedFps FPS received " +
+            "($decodeMs ms decode). The device video path is falling behind; " +
+            "try 720p/60 FPS, H.264, and turn off sharpening.",
+    )
+}
+
 internal class StreamNetworkWarningGate(
     private val minimumConsecutiveSamples: Int = 3,
 ) {

@@ -856,7 +856,7 @@ internal fun StreamScreen(
     }
     LaunchedEffect(streamReady, streamStats) {
         val candidate = if (streamReady) {
-            streamNetworkWarning(streamStats)
+            streamPerformanceWarning(streamStats)
         } else {
             null
         }
