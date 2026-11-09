@@ -7,6 +7,58 @@ import org.junit.Test
 
 class AndroidRecommendedProfileTest {
     @Test
+    fun recognizesRedmi14CMarketingNameAndXiaomiIdentifiers() {
+        assertTrue(
+            isRedmi14CDevice(
+                manufacturer = "Xiaomi",
+                brand = "Redmi",
+                model = "Redmi 14C",
+                device = "lake",
+                product = "lake_global",
+            ),
+        )
+        assertTrue(
+            isRedmi14CDevice(
+                manufacturer = "Xiaomi",
+                brand = "Redmi",
+                model = "2409BRN2CG",
+                device = "lake",
+                product = "lake_global",
+            ),
+        )
+        assertFalse(
+            isRedmi14CDevice(
+                manufacturer = "Xiaomi",
+                brand = "Xiaomi",
+                model = "Redmi Note 13",
+                device = "sapphire",
+                product = "sapphire_global",
+            ),
+        )
+    }
+
+    @Test
+    fun redmi14CUses720pSixtyFpsWithConservativeBitrate() {
+        val recommendation = recommendedAndroidStreamProfile(
+            displayWidth = 1640,
+            displayHeight = 720,
+            processorCount = 8,
+            totalMemoryMiB = 6_144,
+            androidTvProfile = false,
+            report = codecReport(
+                h264Max = 1920 to 1080,
+                h265Max = 1920 to 1080,
+            ),
+            conservativeDeviceProfile = true,
+        )
+
+        assertEquals("1280x720", recommendation.stream.resolution)
+        assertEquals(60, recommendation.stream.fps)
+        assertEquals(18, recommendation.stream.maxBitrateMbps)
+        assertEquals(VideoCodec.H264, recommendation.stream.codec)
+    }
+
+    @Test
     fun constrainedDeviceUsesSafe720pThirtyProfile() {
         val recommendation = recommendedAndroidStreamProfile(
             displayWidth = 2560,
