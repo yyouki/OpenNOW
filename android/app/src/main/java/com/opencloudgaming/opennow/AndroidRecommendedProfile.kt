@@ -39,6 +39,13 @@ internal fun recommendedAndroidStreamProfile(
         manufacturer = Build.MANUFACTURER,
         model = Build.MODEL,
     )
+    val conservativeDeviceProfile = isRedmi14CDevice(
+        manufacturer = Build.MANUFACTURER,
+        brand = Build.BRAND,
+        model = Build.MODEL,
+        device = Build.DEVICE,
+        product = Build.PRODUCT,
+    )
     return recommendedAndroidStreamProfile(
         displayWidth = displayWidth,
         displayHeight = displayHeight,
@@ -47,7 +54,33 @@ internal fun recommendedAndroidStreamProfile(
         androidTvProfile = tvProfile,
         nvidiaShieldTv = shieldTv,
         report = report,
+        conservativeDeviceProfile = conservativeDeviceProfile,
     )
+}
+
+internal fun isRedmi14CDevice(
+    manufacturer: String?,
+    brand: String?,
+    model: String?,
+    device: String?,
+    product: String?,
+): Boolean {
+    val normalizedManufacturer = manufacturer.orEmpty().lowercase()
+    val normalizedBrand = brand.orEmpty().lowercase()
+    val normalizedModel = model.orEmpty().lowercase()
+    val xiaomiFamily = normalizedManufacturer.contains("xiaomi") ||
+        normalizedBrand.contains("redmi") ||
+        normalizedBrand.contains("poco")
+    val modelCodeMatch = normalizedModel.startsWith("2409brn2") ||
+        normalizedModel.startsWith("2411drn47")
+    val codenameMatch = listOf(device, product).any { value ->
+        value.orEmpty().lowercase().split(Regex("[^a-z0-9]+"))
+            .any { it == "lake" || it == "pond" }
+    }
+
+    // Match the Redmi 14C by marketing name or its known Xiaomi model/codename identifiers.
+    return normalizedModel.contains("redmi 14c") ||
+        (xiaomiFamily && (modelCodeMatch || codenameMatch))
 }
 
 internal fun recommendedAndroidStreamProfile(
@@ -58,6 +91,7 @@ internal fun recommendedAndroidStreamProfile(
     androidTvProfile: Boolean,
     nvidiaShieldTv: Boolean = false,
     report: RuntimeCodecReport?,
+    conservativeDeviceProfile: Boolean = false,
 ): AndroidDeviceRecommendation {
     val safeDisplayWidth = displayWidth.coerceAtLeast(1)
     val safeDisplayHeight = displayHeight.coerceAtLeast(1)
@@ -66,6 +100,7 @@ internal fun recommendedAndroidStreamProfile(
         capability.streamingDecoderUsableForLaunch() && capability.streamingHardwareDecoderAvailable()
     }
     val lowPower = report?.lowPowerGpuProfile == true ||
+        conservativeDeviceProfile ||
         totalMemoryMiB?.let { it < 3_000L } == true ||
         safeProcessorCount <= 4 ||
         noVerifiedHardwareDecoder
