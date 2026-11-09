@@ -50,10 +50,14 @@ jobs:
         run: |
           sdkmanager --install \
             "platform-tools" \
-            "platforms;android-37" \
+            "platforms;android-37.0" \
             "build-tools;37.0.0" \
             "ndk;27.2.12479018" \
             "cmake;3.22.1"
+          # API 37 is installed as android-37.0; AGP 9.4 resolves compileSdk 37 as android-37.
+          if [ ! -e "$ANDROID_SDK_ROOT/platforms/android-37" ]; then
+            ln -s android-37.0 "$ANDROID_SDK_ROOT/platforms/android-37"
+          fi
           yes | sdkmanager --licenses
 
       - name: Set up Rust and Android targets
