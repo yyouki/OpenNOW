@@ -89,3 +89,27 @@ later builds reuse Cargo and Gradle outputs. `CARGO` can select an alternative C
 Protocol validation: `cargo test --manifest-path nvst/Cargo.toml --workspace`.
 Live GFN playback, touch/controller hardware, HDR output, and network-loss recovery still need
 physical-device verification. Source provenance and Android-specific differences: `nvst/UPSTREAM.md`.
+
+## Fork CI and Android Releases
+
+The `android-redmi14c` branch has a GitHub Actions workflow that runs Android unit tests and `lintDebug`, then builds both `assembleDebug` and `assembleRelease`. The debug and signed sideload release APKs are uploaded as separate workflow artifacts.
+
+To publish a GitHub Release, open **Actions → Android Release → Run workflow**, select the `android-redmi14c` branch, and enter a version such as `2.3.8-redmi14c.1`. The workflow runs unit tests and lint, builds a sideload APK and a Play Store AAB, calculates SHA-256 checksums, and publishes the assets on a GitHub Release.
+
+### Persistent APK signing
+
+For repeat releases that can update an already-installed APK, configure these repository Actions secrets with one persistent signing key:
+
+- `ANDROID_RELEASE_KEYSTORE_BASE64`: the keystore file encoded as Base64.
+- `ANDROID_RELEASE_KEYSTORE_PASSWORD`: the keystore password.
+- `ANDROID_RELEASE_KEY_ALIAS`: the key alias.
+- `ANDROID_RELEASE_KEY_PASSWORD`: optional; defaults to the keystore password.
+
+Without those secrets, CI creates a temporary test signing key so the release APK can still be installed. A later build will have a different signature; uninstall the previous temporary-key build before installing it. Never commit a production signing keystore or its passwords to this public repository.
+
+### Route and premium-membership regression coverage
+
+The app already exposes provider-advertised region selection under **Settings → Stream → Connection → Region**. Automatic NVIDIA discovery can fail over to a live regional front door when the automatic discovery endpoint is unavailable; explicitly selected servers and alliance-provider routes are kept separate. Install-to-Play games with valid persistent storage are routed to the account's advertised storage region.
+
+The Android unit-test suite includes `GfnLaunchRoutingTest`, `GfnServerInfoTest`, `GfnSubscriptionTest`, and `GameMembershipRequirementTest`. These cover route discovery/failover, storage-region routing, cancellation and invalid routes, subscription parsing, and Free/Performance/Ultimate membership warnings. They use test fixtures and do not replace live streaming tests with an account that is legitimately entitled to the game and service.
+
