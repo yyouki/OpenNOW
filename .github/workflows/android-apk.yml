@@ -80,6 +80,9 @@ jobs:
         working-directory: android
         run: |
           chmod +x ./gradlew
+          # Pin CMake 3.22.1: the NVST Opus dependency uses legacy CMake policies removed in 4.x.
+          export CMAKE="$ANDROID_SDK_ROOT/cmake/3.22.1/bin/cmake"
+          test -x "$CMAKE"
           ./gradlew --no-daemon --stacktrace :app:testDebugUnitTest :app:assembleDebug
 
       - name: Verify APK and calculate checksum
