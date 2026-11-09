@@ -52,7 +52,8 @@ class AndroidRecommendedProfileTest {
             conservativeDeviceProfile = true,
         )
 
-        assertEquals("1280x720", recommendation.stream.resolution)
+        assertEquals("1376x590", recommendation.stream.resolution)
+        assertEquals("21:9", recommendation.stream.aspectRatio)
         assertEquals(60, recommendation.stream.fps)
         assertEquals(18, recommendation.stream.maxBitrateMbps)
         assertEquals(VideoCodec.H264, recommendation.stream.codec)
