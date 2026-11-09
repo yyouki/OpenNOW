@@ -1,4 +1,39 @@
 {
+  "161": {
+    "version": "2.0.5",
+    "notes": [
+      "Added **Changelogs** to Settings so release notes are easy to find.",
+      "After a Google Play update, the new notes appear once when you open the app.",
+      "**On screen Controller deadzoneing is now fixed**.",
+      "**Rare queue failures are now fixed**",
+      "A new, experimental option that may potentially reduce lag is avaliable. You can find it under **Settings > Stream > Video Output > __MediaCodec (Direct)__**.",
+      "The status bar can now be moved around. While in stream, **Back/swipe to go back > Status bar > Status bar drag mode**.",
+      "You can now display your current playtime in the status bar. While in stream, **Back/swipe to go back > Status bar > Show playtime**.",
+      "Reduced the amount of lag that was being caused from debug logging",
+      "Free tier bugs can now be overidden",
+      "Cursor is a little bit more smoother now",
+      "Fix mouse & kb detection for certain devices",
+      "Premium games will now be marked",
+      "Game details are parsed a little better",
+      "On screen Controller are more responsive now"
+    ]
+  },
+  "167": {
+    "version": "2.1.1",
+    "notes": [
+      "Added **Website client mode** under **Settings > Stream > Connection**. Native touch is disabled while using it.",
+      "**Your library loads faster now, and it's fixed.**",
+      "Fixed games showing up in your library that weren't added to it",
+      "**Direct click is more accurate now**",
+      "Smoother video with **MediaCodec (Direct)**",
+      "Controller Sizing Changes",
+      "DPad fixes",
+      "Improved streaming performance, especially on **Android TV**",
+      "Improved controller support with **experimental NVST**",
+      "Game covers look better on **Android TV**",
+      "Goofy can now pop up from any edge of the screen"
+    ]
+  },
   "194": {
     "version": "2.3.8",
     "notes": [
@@ -22,42 +57,8 @@
       "More **MediaCodec (Direct)** fixes",
       "Improved reconnecting and alliance provider support with **experimental NVST**",
       "Fixed a crash when connecting to a stream",
-      "Goofy has a screensaver now. Tap the avatar under **Settings > Interface** to try it"
-    ]
-  },
-  "167": {
-    "version": "2.1.1",
-    "notes": [
-      "Added **Website client mode** under **Settings > Stream > Connection**. Native touch is disabled while using it.",
-      "**Your library loads faster now, and it's fixed.**",
-      "Fixed games showing up in your library that weren't added to it",
-      "**Direct click is more accurate now**",
-      "Smoother video with **MediaCodec (Direct)**",
-      "Controller Sizing Changes",
-      "DPad fixes",
-      "Improved streaming performance, especially on **Android TV**",
-      "Improved controller support with **experimental NVST**",
-      "Game covers look better on **Android TV**",
-      "Goofy can now pop up from any edge of the screen"
-    ]
-  },
-  "161": {
-    "version": "2.0.5",
-    "notes": [
-      "Added **Changelogs** to Settings so release notes are easy to find.",
-      "After a Google Play update, the new notes appear once when you open the app.",
-      "**On screen Controller deadzoneing is now fixed**.",
-      "**Rare queue failures are now fixed**",
-      "A new, experimental option that may potentially reduce lag is avaliable. You can find it under **Settings > Stream > Video Output > __MediaCodec (Direct)__**.",
-      "The status bar can now be moved around. While in stream, **Back/swipe to go back > Status bar > Status bar drag mode**.",
-      "You can now display your current playtime in the status bar. While in stream, **Back/swipe to go back > Status bar > Show playtime**.",
-      "Reduced the amount of lag that was being caused from debug logging",
-      "Free tier bugs can now be overidden",
-      "Cursor is a little bit more smoother now",
-      "Fix mouse & kb detection for certain devices",
-      "Premium games will now be marked",
-      "Game details are parsed a little better",
-      "On screen Controller are more responsive now"
+      "Goofy has a screensaver now. Tap the avatar under **Settings > Interface** to try it",
+      "Redmi 14C devices now receive a conservative streaming recommendation for more consistent playback."
     ]
   }
 }
