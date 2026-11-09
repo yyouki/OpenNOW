@@ -41,7 +41,7 @@ android {
         //noinspection EditedTargetSdkVersion
         targetSdk = 37
         versionCode = 194
-        versionName = "2.3.8"
+        versionName = providers.gradleProperty("androidReleaseVersion").orElse("2.3.8").get()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("boolean", "APK_UPDATES_SUPPORTED", "true")
