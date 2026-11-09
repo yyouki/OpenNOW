@@ -94,7 +94,16 @@ physical-device verification. Source provenance and Android-specific differences
 
 The `android-redmi14c` branch has a GitHub Actions workflow that runs Android unit tests and `lintDebug`, then builds both `assembleDebug` and `assembleRelease`. The debug and signed sideload release APKs are uploaded as separate workflow artifacts.
 
-To publish a GitHub Release, open **Actions → Android Release → Run workflow**, select the `android-redmi14c` branch, and enter a version such as `2.3.8-redmi14c.1`. The workflow runs unit tests and lint, builds a sideload APK and a Play Store AAB, calculates SHA-256 checksums, and publishes the assets on a GitHub Release.
+To publish a GitHub Release, create and push a version tag from the `android-redmi14c` branch. For example:
+
+```sh
+git checkout android-redmi14c
+git pull origin android-redmi14c
+git tag android-v2.3.8-redmi14c.1
+git push origin android-v2.3.8-redmi14c.1
+```
+
+The `android-v*` tag starts the **Android Release** workflow. It runs unit tests and Android lint, builds a versioned sideload APK, calculates a SHA-256 checksum, and publishes the APK as a GitHub Release asset. A hyphenated version (such as `2.3.8-redmi14c.1`) is marked as a prerelease.
 
 ### Persistent APK signing
 
