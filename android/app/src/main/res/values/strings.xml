@@ -428,6 +428,10 @@
     <string name="stream_statusbar_metric_loss">Loss</string>
     <string name="stream_statusbar_metric_time">Time</string>
     <string name="stream_statusbar_metric_ssid">SSID</string>
+    <string name="stream_statusbar_ssid_permission_title">Allow Wi-Fi name display?</string>
+    <string name="stream_statusbar_ssid_permission_message">Android requires precise location permission to reveal the connected Wi-Fi network name. OpenNOW only reads the SSID to show it in the stream status bar; it does not save or send the network name.</string>
+    <string name="stream_statusbar_ssid_permission_allow">Continue</string>
+    <string name="stream_statusbar_ssid_permission_cancel">Not now</string>
     <string name="stream_statusbar_metric_keyboard">Keyboard</string>
 
     <!-- Session report -->

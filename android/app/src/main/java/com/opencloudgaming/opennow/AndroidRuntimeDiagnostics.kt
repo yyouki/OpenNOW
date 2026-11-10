@@ -218,18 +218,23 @@ internal object AndroidRuntimeDiagnostics {
     @Suppress("DEPRECATION")
     fun wifiSsid(context: Context): String? {
         val appContext = context.applicationContext
-        val connectivity = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-            ?: return null
-        val capabilities = connectivity.getNetworkCapabilities(connectivity.activeNetwork) ?: return null
-        if (!capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return null
-        val networkInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            capabilities.transportInfo as? WifiInfo
-        } else {
-            null
-        }
-        val wifiInfo = networkInfo
-            ?: (appContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager)?.connectionInfo
-        return normalizeWifiSsid(wifiInfo?.ssid)
+        if (appContext.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) return null
+        return runCatching {
+            val connectivity = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                ?: return@runCatching null
+            val capabilities = connectivity.getNetworkCapabilities(connectivity.activeNetwork) ?: return@runCatching null
+            if (!capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return@runCatching null
+            val networkInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                capabilities.transportInfo as? WifiInfo
+            } else {
+                null
+            }
+            val wifiInfo = networkInfo
+                ?: (appContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager)?.connectionInfo
+            normalizeWifiSsid(wifiInfo?.ssid)
+        }.getOrNull()
     }
 
     fun snapshot(context: Context): AndroidRuntimeDiagnosticsSnapshot {

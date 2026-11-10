@@ -1,9 +1,13 @@
 package com.opencloudgaming.opennow
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.provider.Settings
 import androidx.annotation.StringRes
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -2750,42 +2754,103 @@ private fun LazyListScope.statusBarPageItems(
         )
     }
     item {
-        // Compact toggles side by side; the standard row height would waste the panel.
-        val statusBarMetricStyle = ControlRowStyle.stream().copy(
-            verticalPadding = 6.dp,
-            labelStyle = MaterialTheme.typography.labelMedium,
+        StreamStatusMetricsGrid(
+            settings = settings,
+            onStatsMetricsChange = onStatsMetricsChange,
+            onKeyboardButtonToggle = onKeyboardButtonToggle,
+            onButtonTone = onButtonTone,
         )
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val columns = when {
-                maxWidth >= 800.dp -> 5
-                maxWidth >= 620.dp -> 4
-                maxWidth >= 460.dp -> 3
-                else -> 2
-            }
-            val gap = 8.dp
-            val itemWidth = (maxWidth - gap * (columns - 1)) / columns.toFloat()
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                maxItemsInEachRow = columns,
-                horizontalArrangement = Arrangement.spacedBy(gap),
-                verticalArrangement = Arrangement.spacedBy(gap),
-            ) {
-                StreamStatusItem.entries.forEach { item ->
-                    ControlSwitchRow(
-                        label = stringResource(item.labelRes),
-                        checked = item.enabledIn(settings),
-                        onCheckedChange = { enabled ->
-                            onButtonTone()
-                            if (item == StreamStatusItem.Keyboard) {
-                                onKeyboardButtonToggle()
-                            } else {
-                                onStatsMetricsChange(item.setEnabled(settings, enabled).streamStatsMetrics)
-                            }
-                        },
-                        modifier = Modifier.width(itemWidth),
-                        style = statusBarMetricStyle,
-                    )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun StreamStatusMetricsGrid(
+    settings: AppSettings,
+    onStatsMetricsChange: (StreamStatsMetrics) -> Unit,
+    onKeyboardButtonToggle: () -> Unit,
+    onButtonTone: () -> Unit,
+) {
+    val context = LocalContext.current
+    var showSsidPermissionDialog by rememberSaveable { mutableStateOf(false) }
+    val ssidPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { permissions ->
+        if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+            onStatsMetricsChange(StreamStatusItem.Ssid.setEnabled(settings, true).streamStatsMetrics)
+        }
+    }
+
+    if (showSsidPermissionDialog) {
+        AlertDialog(
+            onDismissRequest = { showSsidPermissionDialog = false },
+            title = { Text(stringResource(R.string.stream_statusbar_ssid_permission_title)) },
+            text = { Text(stringResource(R.string.stream_statusbar_ssid_permission_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSsidPermissionDialog = false
+                        ssidPermissionLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                            ),
+                        )
+                    },
+                ) {
+                    Text(stringResource(R.string.stream_statusbar_ssid_permission_allow))
                 }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSsidPermissionDialog = false }) {
+                    Text(stringResource(R.string.stream_statusbar_ssid_permission_cancel))
+                }
+            },
+        )
+    }
+
+    // Keep compact items aligned in columns; SSID permission is requested only on explicit opt-in.
+    val statusBarMetricStyle = ControlRowStyle.stream().copy(
+        verticalPadding = 6.dp,
+        labelStyle = MaterialTheme.typography.labelMedium,
+    )
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val columns = when {
+            maxWidth >= 800.dp -> 5
+            maxWidth >= 620.dp -> 4
+            maxWidth >= 460.dp -> 3
+            else -> 2
+        }
+        val gap = 8.dp
+        val itemWidth = (maxWidth - gap * (columns - 1)) / columns.toFloat()
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            maxItemsInEachRow = columns,
+            horizontalArrangement = Arrangement.spacedBy(gap),
+            verticalArrangement = Arrangement.spacedBy(gap),
+        ) {
+            StreamStatusItem.entries.forEach { item ->
+                ControlSwitchRow(
+                    label = stringResource(item.labelRes),
+                    checked = item.enabledIn(settings),
+                    onCheckedChange = { enabled ->
+                        onButtonTone()
+                        if (item == StreamStatusItem.Keyboard) {
+                            onKeyboardButtonToggle()
+                        } else if (
+                            item == StreamStatusItem.Ssid &&
+                            enabled &&
+                            context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) !=
+                            PackageManager.PERMISSION_GRANTED
+                        ) {
+                            showSsidPermissionDialog = true
+                        } else {
+                            onStatsMetricsChange(item.setEnabled(settings, enabled).streamStatsMetrics)
+                        }
+                    },
+                    modifier = Modifier.width(itemWidth),
+                    style = statusBarMetricStyle,
+                )
             }
         }
     }
