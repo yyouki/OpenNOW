@@ -194,8 +194,43 @@ enum class AndroidThermalStatus(val logValue: String) {
     Shutdown("shutdown"),
 }
 
+internal fun normalizeWifiSsid(rawSsid: String?): String? {
+    val value = rawSsid
+        ?.trim()
+        ?.removeSurrounding("\"")
+        ?.trim()
+        ?.takeIf {
+            it.isNotBlank() &&
+                !it.equals("<unknown ssid>", ignoreCase = true) &&
+                !it.equals("unknown ssid", ignoreCase = true) &&
+                !it.equals("0x", ignoreCase = true)
+        } ?: return null
+    return value
+        .filterNot { it.code in 0..31 || it.code == 127 }
+        .take(32)
+        .trim()
+        .takeIf(String::isNotBlank)
+}
+
 internal object AndroidRuntimeDiagnostics {
     fun batteryPercent(context: Context): Int? = readBattery(context.applicationContext).percent
+
+    @Suppress("DEPRECATION")
+    fun wifiSsid(context: Context): String? {
+        val appContext = context.applicationContext
+        val connectivity = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            ?: return null
+        val capabilities = connectivity.getNetworkCapabilities(connectivity.activeNetwork) ?: return null
+        if (!capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return null
+        val networkInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            capabilities.transportInfo as? WifiInfo
+        } else {
+            null
+        }
+        val wifiInfo = networkInfo
+            ?: (appContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager)?.connectionInfo
+        return normalizeWifiSsid(wifiInfo?.ssid)
+    }
 
     fun snapshot(context: Context): AndroidRuntimeDiagnosticsSnapshot {
         val appContext = context.applicationContext

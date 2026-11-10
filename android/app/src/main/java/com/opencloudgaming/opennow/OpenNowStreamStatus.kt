@@ -265,7 +265,7 @@ internal fun StreamStatsPill(
 ) {
     if (metrics.enabledCount() == 0 && !keyboardButtonEnabled) return
     val compact = style == StreamStatsStyle.Compact
-    val deviceStatus = rememberCompactStreamDeviceStatus()
+    val deviceStatus = rememberCompactStreamDeviceStatus(includeSsid = metrics.ssid)
     Surface(
         modifier = modifier
             .padding(OpenNowSpacing.sm)
@@ -939,8 +939,26 @@ private fun StreamStatsMetricItems(
             contentDescription = stringResource(R.string.stream_stats_playtime_cd, elapsed),
         )
     }
+    if (metrics.time) {
+        val localTime = formatStatusBarTime(sessionNowMs)
+        StreamStatsText(
+            value = stringResource(R.string.stream_stats_time, localTime),
+            modifier = itemModifier,
+            contentDescription = stringResource(R.string.stream_stats_cd_time, localTime),
+        )
+    }
     if (metrics.connection) {
         StreamNetworkIndicator(deviceStatus, itemModifier)
+    }
+    if (metrics.ssid && deviceStatus.networkKind == AndroidNetworkKind.Wifi) {
+        val ssid = deviceStatus.wifiSsid
+        StreamStatsText(
+            value = ssid?.let { stringResource(R.string.stream_stats_ssid, it) }
+                ?: stringResource(R.string.stream_stats_ssid_unavailable),
+            modifier = itemModifier,
+            contentDescription = ssid?.let { stringResource(R.string.stream_stats_cd_ssid, it) }
+                ?: stringResource(R.string.stream_stats_cd_ssid_unavailable),
+        )
     }
     if (metrics.resolution) {
         StreamStatsText(
@@ -960,6 +978,14 @@ private fun StreamStatsMetricItems(
 
 /** Shown in place of a metric that has not been measured yet. */
 private const val NO_STAT_VALUE = "--"
+
+internal fun formatStatusBarTime(
+    timestampMs: Long,
+    locale: java.util.Locale = java.util.Locale.getDefault(),
+    timeZone: java.util.TimeZone = java.util.TimeZone.getDefault(),
+): String = java.text.SimpleDateFormat("HH:mm", locale).apply {
+    this.timeZone = timeZone
+}.format(java.util.Date(timestampMs))
 
 @Composable
 private fun StreamStatsText(
@@ -1003,6 +1029,7 @@ private data class CompactStreamDeviceStatus(
     val networkKind: AndroidNetworkKind = AndroidNetworkKind.Unknown,
     val networkBars: Int? = null,
     val cellularGeneration: String? = null,
+    val wifiSsid: String? = null,
 )
 
 @Composable
@@ -1019,20 +1046,22 @@ internal fun rememberSessionStartBatteryPercent(sessionId: String?): Int? {
 }
 
 @Composable
-private fun rememberCompactStreamDeviceStatus(): CompactStreamDeviceStatus {
+private fun rememberCompactStreamDeviceStatus(includeSsid: Boolean): CompactStreamDeviceStatus {
     val context = LocalContext.current
     val appContext = remember(context) { context.applicationContext }
     var status by remember(appContext) { mutableStateOf(CompactStreamDeviceStatus()) }
-    LaunchedEffect(appContext) {
+    LaunchedEffect(appContext, includeSsid) {
         while (true) {
-            status = withContext(Dispatchers.IO) { readCompactStreamDeviceStatus(appContext) }
+            status = withContext(Dispatchers.IO) {
+                readCompactStreamDeviceStatus(appContext, includeSsid)
+            }
             delay(COMPACT_STREAM_DEVICE_STATUS_REFRESH_MS)
         }
     }
     return status
 }
 
-private fun readCompactStreamDeviceStatus(context: Context): CompactStreamDeviceStatus {
+private fun readCompactStreamDeviceStatus(context: Context, includeSsid: Boolean): CompactStreamDeviceStatus {
     val diagnostics = AndroidRuntimeDiagnostics.snapshot(context)
     return CompactStreamDeviceStatus(
         batteryPercent = diagnostics.batteryPercent,
@@ -1040,6 +1069,7 @@ private fun readCompactStreamDeviceStatus(context: Context): CompactStreamDevice
         networkKind = diagnostics.networkKind,
         networkBars = diagnostics.networkSignalBars,
         cellularGeneration = diagnostics.cellularGeneration,
+        wifiSsid = if (includeSsid) AndroidRuntimeDiagnostics.wifiSsid(context) else null,
     )
 }
 

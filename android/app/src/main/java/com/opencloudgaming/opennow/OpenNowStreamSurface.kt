@@ -709,10 +709,24 @@ internal fun StreamScreen(
         }
     }
 
-    LaunchedEffect(streamReady, state.settings.sessionCounterEnabled, state.settings.streamStatsMetrics.playtime, statsVisible, session?.sessionId, sessionStartedAtMs, smartSessionLimit) {
+    LaunchedEffect(
+        streamReady,
+        state.settings.sessionCounterEnabled,
+        state.settings.streamStatsMetrics.playtime,
+        state.settings.streamStatsMetrics.time,
+        statsVisible,
+        session?.sessionId,
+        sessionStartedAtMs,
+        smartSessionLimit,
+    ) {
         var previousRemainingSeconds: Int? = null
         val sentSessionWarnings = mutableSetOf<Int>()
-        while (streamReady && (state.settings.sessionCounterEnabled || (statsVisible && state.settings.streamStatsMetrics.playtime))) {
+        while (
+            streamReady && (
+                state.settings.sessionCounterEnabled ||
+                    (statsVisible && (state.settings.streamStatsMetrics.playtime || state.settings.streamStatsMetrics.time))
+            )
+        ) {
             val nowMs = System.currentTimeMillis()
             timerNowMs = nowMs
             if (state.settings.sessionCounterEnabled) {

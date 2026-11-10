@@ -111,11 +111,11 @@ To publish a GitHub Release, create and push a version tag from the `android-red
 ```sh
 git checkout android-redmi14c
 git pull origin android-redmi14c
-git tag android-v2.3.8-redmi14c.1
-git push origin android-v2.3.8-redmi14c.1
+git tag android-v2.4.1-redmi14c.1
+git push origin android-v2.4.1-redmi14c.1
 ```
 
-The `android-v*` tag starts the **Android Release** workflow. It runs unit tests, builds and signs a versioned sideload APK, uploads the artifact, and publishes the GitHub Release. Full Android lint runs independently in the **Android Lint** workflow, so a long lint scan does not block a signed release. A hyphenated version (such as `2.3.8-redmi14c.1`) is marked as a prerelease.
+The `android-v*` tag starts the **Android Release** workflow. It runs unit tests, builds and signs a versioned sideload APK, uploads the artifact, and publishes the GitHub Release. Full Android lint runs independently in the **Android Lint** workflow, so a long lint scan does not block a signed release. A hyphenated version (such as `2.4.1-redmi14c.1`) is marked as a prerelease.
 
 ### Persistent APK signing
 
@@ -130,13 +130,13 @@ Without those secrets, CI creates a temporary test signing key so the release AP
 
 ### Route and premium-membership regression coverage
 
-The app already exposes provider-advertised region selection under **Settings → Stream → Connection → Region**. Automatic NVIDIA discovery can fail over to a live regional front door when the automatic discovery endpoint is unavailable; explicitly selected servers and alliance-provider routes are kept separate. Install-to-Play games with valid persistent storage are routed to the account's advertised storage region.
+The app exposes provider-advertised region selection under **Settings → Stream → Connection → Region**, with bounded TCP-connect measurements for every provider-advertised route and lower measured endpoints shown first. Automatic NVIDIA discovery can fail over to a live regional front door when the automatic discovery endpoint is unavailable; explicitly selected servers and alliance-provider routes are kept separate. Install-to-Play games with valid persistent storage are routed to the account's advertised storage region.
 
 ### Region guidance for Indonesia
 
 Keep **Auto** as the baseline, then compare only regions returned by the active provider. For an NVIDIA-operated account, Japan is the nearby Asia region to test first; India may also appear when the account's NVIDIA server metadata advertises it. Do not hardcode Malaysia or Thailand into an NVIDIA account's route list: NVIDIA lists those as separate GeForce NOW Alliance Partner services (YES and Brothers Picture), not as NVIDIA-operated regions. A partner route requires the corresponding partner service/account. The live region picker must remain provider-driven, and Install-to-Play must continue to follow the account's persistent-storage region. See [NVIDIA's supported-location list](https://nvidia.custhelp.com/app/answers/detail/a_id/5023) and [official service status](https://status.geforcenow.com/).
 
-For Indonesia, the practical OpenNOW priority is to show the active provider's available regions clearly, retain **Auto**, and let users compare real session latency/jitter rather than infer the best route from geographic distance alone. A server discovery endpoint responding fastest is not a guarantee that its gameplay path has the lowest packet loss or queue time.
+For Indonesia, the region picker retains **Auto** and measures every region advertised by the active provider. The displayed TCP-connect estimate is the median of multiple HTTPS endpoint samples, with a variation value; probing is concurrency-limited and cached to avoid unnecessary traffic. This is an endpoint estimate, not an ICMP ping or a prediction of gameplay quality. True media RTT, jitter, and packet loss are measured only on the route currently carrying a live stream (WebRTC or NVST); idle routes have no media packets from which to calculate packet loss. OpenNOW never converts TCP probe failures into fake packet-loss values or silently overrides a manually selected region.
 
 The Android unit-test suite includes `GfnLaunchRoutingTest`, `GfnServerInfoTest`, `GfnSubscriptionTest`, and `GameMembershipRequirementTest`. These cover route discovery/failover, storage-region routing, cancellation and invalid routes, subscription parsing, and Free/Performance/Ultimate membership warnings. They use test fixtures and do not replace live streaming tests with an account that is legitimately entitled to the game and service.
 

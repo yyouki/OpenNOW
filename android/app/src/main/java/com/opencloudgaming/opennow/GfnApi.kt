@@ -14,7 +14,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -3035,6 +3037,11 @@ class GfnAccountConnectorRepository(
         }
 }
 
+private const val REGION_PING_MAX_CONCURRENCY = 6
+private const val REGION_PING_TIMEOUT_MS = 650
+private const val REGION_PING_SAMPLE_COUNT = 3
+private const val REGION_PING_SAMPLE_DELAY_MS = 60L
+
 class PrintedWasteRepository(
     private val http: OkHttpClient = defaultHttpClient(),
 ) {
@@ -3090,28 +3097,34 @@ class PrintedWasteRepository(
     }
 
     suspend fun pingRegions(regions: List<StreamRegion>): List<PingResult> = coroutineScope {
-        regions.map { region ->
+        // Bound simultaneous sockets while measuring every provider-advertised region.
+        val semaphore = Semaphore(REGION_PING_MAX_CONCURRENCY)
+        regions.distinctBy { it.url }.map { region ->
             async(Dispatchers.IO) {
-                val url = region.url.toHttpUrlOrNull()
-                    ?: return@async PingResult(region.url, error = "Invalid URL")
-                val hostname = url.host
-                val port = if (url.isHttps) 443 else 80
-                val validPings = mutableListOf<Long>()
+                semaphore.withPermit {
+                    val url = region.url.toHttpUrlOrNull()
+                        ?: return@withPermit PingResult(region.url, error = "Invalid URL")
+                    // Endpoint TCP connect time is not ICMP ping or live media packet loss.
+                    val hostname = url.host
+                    val port = url.port
+                    val samples = mutableListOf<Long>()
 
-                // The selector waits for the slowest region, so multi-second probes make
-                // one unreachable edge look like a frozen queue screen. A short warm-up
-                // plus two samples is enough to rank playable streaming regions while
-                // bounding the entire parallel pass to roughly two seconds.
-                tcpPing(hostname, port, timeoutMs = 750)
-                repeat(2) { index ->
-                    if (index > 0) delay(50)
-                    tcpPing(hostname, port, timeoutMs = 750)?.let(validPings::add)
-                }
+                    tcpPing(hostname, port, timeoutMs = REGION_PING_TIMEOUT_MS) // DNS/TCP warm-up
+                    repeat(REGION_PING_SAMPLE_COUNT) { index ->
+                        if (index > 0) delay(REGION_PING_SAMPLE_DELAY_MS)
+                        tcpPing(hostname, port, timeoutMs = REGION_PING_TIMEOUT_MS)?.let(samples::add)
+                    }
 
-                if (validPings.isEmpty()) {
-                    PingResult(region.url, error = "All ping tests failed")
-                } else {
-                    PingResult(region.url, pingMs = validPings.average().toLong())
+                    val summary = summarizeRegionPingSamples(samples)
+                    if (summary == null) {
+                        PingResult(region.url, error = "All TCP connect probes failed")
+                    } else {
+                        PingResult(
+                            url = region.url,
+                            pingMs = summary.pingMs,
+                            variationMs = summary.variationMs,
+                        )
+                    }
                 }
             }
         }.map { it.await() }

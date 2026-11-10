@@ -80,6 +80,9 @@ jobs:
 
       - name: Run Android lint
         working-directory: android
+        env:
+          # The lint UAST/IDE analyzer exhausted the daemon heap after ~73 minutes.
+          JAVA_TOOL_OPTIONS: -Xmx4g
         run: |
           chmod +x ./gradlew
           export CMAKE="$ANDROID_SDK_ROOT/cmake/3.22.1/bin/cmake"

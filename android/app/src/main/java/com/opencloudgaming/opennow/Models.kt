@@ -122,8 +122,13 @@ data class StreamStatsMetrics(
     val location: Boolean = false,
     val latency: Boolean = false,
     val packetLoss: Boolean = false,
+    val time: Boolean = false,
+    val ssid: Boolean = false,
 ) {
-    fun enabledCount(): Int = listOf(fps, ping, bitrate, battery, sessionBattery, playtime, connection, resolution, codec, location, latency, packetLoss).count { it }
+    fun enabledCount(): Int = listOf(
+        fps, ping, bitrate, battery, sessionBattery, playtime, connection, resolution,
+        codec, location, latency, packetLoss, time, ssid,
+    ).count { it }
 }
 
 @Serializable
@@ -1546,6 +1551,7 @@ data class StreamRegion(
     val name: String,
     val url: String,
     val pingMs: Long? = null,
+    val pingVariationMs: Long? = null,
 )
 
 @Serializable
@@ -1938,6 +1944,7 @@ data class PingResult(
     val url: String,
     val pingMs: Long? = null,
     val error: String? = null,
+    val variationMs: Long? = null,
 )
 
 @Serializable

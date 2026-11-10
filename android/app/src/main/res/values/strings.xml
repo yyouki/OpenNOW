@@ -426,6 +426,8 @@
     <string name="stream_statusbar_metric_server">Server</string>
     <string name="stream_statusbar_metric_latency">Dec / Jit</string>
     <string name="stream_statusbar_metric_loss">Loss</string>
+    <string name="stream_statusbar_metric_time">Time</string>
+    <string name="stream_statusbar_metric_ssid">SSID</string>
     <string name="stream_statusbar_metric_keyboard">Keyboard</string>
 
     <!-- Session report -->
@@ -477,6 +479,12 @@
     <string name="stream_stats_decode">Dec %1$sms</string>
     <string name="stream_stats_jitter">Jit %1$sms</string>
     <string name="stream_stats_loss">Loss %1$s%%</string>
+    <string name="stream_stats_time">Time %1$s</string>
+    <string name="stream_stats_cd_time">Device time %1$s</string>
+    <string name="stream_stats_ssid">SSID %1$s</string>
+    <string name="stream_stats_ssid_unavailable">SSID --</string>
+    <string name="stream_stats_cd_ssid">Wi-Fi network SSID %1$s</string>
+    <string name="stream_stats_cd_ssid_unavailable">Wi-Fi SSID unavailable</string>
     <string name="stream_stats_cd_fps">%1$d frames per second</string>
     <string name="stream_stats_cd_ping">Ping %1$d milliseconds</string>
     <string name="stream_stats_cd_decode">Decode time %1$s milliseconds per frame</string>
@@ -852,6 +860,8 @@
     <string name="setup_play_metric_battery_preview">Battery 82%%</string>
     <string name="setup_play_metric_session_battery_preview">Used 5%%</string>
     <string name="setup_play_metric_playtime_preview">Played 1:23</string>
+    <string name="setup_play_metric_time_preview">Time 13:51</string>
+    <string name="setup_play_metric_ssid_preview">SSID Home Wi-Fi</string>
     <string name="stream_stats_playtime">Played %1$s</string>
     <string name="stream_stats_playtime_cd">Elapsed playtime %1$s</string>
     <string name="stream_stats_session_battery_used">Used %1$d%%</string>

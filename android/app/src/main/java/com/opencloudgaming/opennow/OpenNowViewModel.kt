@@ -500,6 +500,10 @@ class OpenNowViewModel(application: Application) : AndroidViewModel(application)
     private val subscriptionRepository = GfnSubscriptionRepository(http)
     private val accountConnectorRepository = GfnAccountConnectorRepository(http)
     private val printedWasteRepository = PrintedWasteRepository(http)
+    private var regionPingJob: Job? = null
+    private var lastRegionPingSignature: List<String> = emptyList()
+    private var lastRegionPingAttemptAtMs = 0L
+    private var cachedRegionPingResults: Map<String, PingResult> = emptyMap()
     private val sessionRepository = GfnSessionRepository(
         authStore = authStore,
         http = http,
@@ -2508,6 +2512,71 @@ class OpenNowViewModel(application: Application) : AndroidViewModel(application)
                     regions = fetchedRegions.ifEmpty { current.regions },
                 )
             }
+            refreshRegionPings(if (fetchedRegions.isNotEmpty()) fetchedRegions else _state.value.regions)
+        }
+    }
+
+    private fun refreshRegionPings(regions: List<StreamRegion>) {
+        val routes = regions.distinctBy { it.url }.filter { it.url.isNotBlank() }
+        val signature = routes.map { it.url }.sorted()
+        if (signature.isEmpty()) {
+            regionPingJob?.cancel()
+            lastRegionPingSignature = emptyList()
+            cachedRegionPingResults = emptyMap()
+            return
+        }
+
+        val now = SystemClock.elapsedRealtime()
+        val cacheIsFresh = signature == lastRegionPingSignature &&
+            now >= lastRegionPingAttemptAtMs &&
+            now - lastRegionPingAttemptAtMs < REGION_PING_CACHE_TTL_MS &&
+            signature.all(cachedRegionPingResults::containsKey)
+        if (cacheIsFresh) {
+            applyRegionPingResults(signature, cachedRegionPingResults)
+            return
+        }
+        if (signature == lastRegionPingSignature && regionPingJob?.isActive == true) return
+
+        regionPingJob?.cancel()
+        lastRegionPingSignature = signature
+        lastRegionPingAttemptAtMs = now
+        regionPingJob = viewModelScope.launch {
+            val measured = try {
+                printedWasteRepository.pingRegions(routes)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                routes.map { route ->
+                    PingResult(route.url, error = error.message ?: "TCP probe failed")
+                }
+            }
+            val byUrl = measured.associateBy(PingResult::url)
+            cachedRegionPingResults = byUrl
+            lastRegionPingAttemptAtMs = SystemClock.elapsedRealtime()
+            applyRegionPingResults(signature, byUrl)
+        }
+    }
+
+    private fun applyRegionPingResults(
+        signature: List<String>,
+        results: Map<String, PingResult>,
+    ) {
+        _state.update { current ->
+            val currentSignature = current.regions
+                .filter { it.url.isNotBlank() }
+                .distinctBy { it.url }
+                .map { it.url }
+                .sorted()
+            if (currentSignature != signature) return@update current
+            current.copy(
+                regions = current.regions.map { region ->
+                    val result = results[region.url]
+                    region.copy(
+                        pingMs = result?.pingMs,
+                        pingVariationMs = result?.variationMs,
+                    )
+                },
+            )
         }
     }
 
@@ -4567,6 +4636,7 @@ class OpenNowViewModel(application: Application) : AndroidViewModel(application)
                 serverInfoRepository.regions(token, session.provider.streamingServiceUrl)
             }
             _state.update { it.copy(regions = regions) }
+            refreshRegionPings(regions)
         }
         gamesJob?.cancel()
         gamesJob = viewModelScope.launch {

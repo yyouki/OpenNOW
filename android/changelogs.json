@@ -60,5 +60,14 @@
       "Goofy has a screensaver now. Tap the avatar under **Settings > Interface** to try it",
       "Redmi 14C devices now receive a conservative streaming recommendation for more consistent playback."
     ]
+  },
+  "195": {
+    "version": "2.4.1",
+    "notes": [
+      "Added optional **SSID** and local **Time** items to the in-stream status bar.",
+      "The region picker now measures every endpoint advertised by the active provider and ranks measured routes by median TCP-connect time.",
+      "Region probes are bounded and cached. Live media ping, jitter, and packet loss remain based on the active WebRTC or NVST session.",
+      "Improved route comparison without forcing a server change or bypassing provider availability."
+    ]
   }
 }

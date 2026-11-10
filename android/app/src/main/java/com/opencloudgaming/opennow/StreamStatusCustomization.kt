@@ -34,6 +34,8 @@ internal enum class StreamStatusItem(
     Server(R.string.stream_statusbar_metric_server, R.string.setup_play_metric_server_preview),
     Latency(R.string.stream_statusbar_metric_latency, R.string.setup_play_metric_latency_preview),
     PacketLoss(R.string.stream_statusbar_metric_loss, R.string.setup_play_metric_loss_preview),
+    Time(R.string.stream_statusbar_metric_time, R.string.setup_play_metric_time_preview),
+    Ssid(R.string.stream_statusbar_metric_ssid, R.string.setup_play_metric_ssid_preview),
     ;
 
     fun enabledIn(settings: AppSettings): Boolean = when (this) {
@@ -50,6 +52,8 @@ internal enum class StreamStatusItem(
         Server -> settings.streamStatsMetrics.location
         Latency -> settings.streamStatsMetrics.latency
         PacketLoss -> settings.streamStatsMetrics.packetLoss
+        Time -> settings.streamStatsMetrics.time
+        Ssid -> settings.streamStatsMetrics.ssid
     }
 
     fun setEnabled(settings: AppSettings, enabled: Boolean): AppSettings {
@@ -71,6 +75,8 @@ internal enum class StreamStatusItem(
             Server -> metrics.copy(location = enabled)
             Latency -> metrics.copy(latency = enabled)
             PacketLoss -> metrics.copy(packetLoss = enabled)
+            Time -> metrics.copy(time = enabled)
+            Ssid -> metrics.copy(ssid = enabled)
         }
         return settings.copy(streamStatsMetrics = updatedMetrics)
     }

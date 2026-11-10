@@ -3921,7 +3921,7 @@ struct InputQueuePermit(Arc<AtomicUsize>);
 impl InputQueuePermit {
     fn acquire(pending: &Arc<AtomicUsize>) -> Result<Self, TransportError> {
         pending
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |count| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |count| {
                 (count < MAX_QUEUED_INPUT_PACKETS).then_some(count + 1)
             })
             .map_err(|_| TransportError::InputBackpressured)?;

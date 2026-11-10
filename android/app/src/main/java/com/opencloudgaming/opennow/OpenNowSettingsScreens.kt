@@ -1105,8 +1105,14 @@ private fun SettingsContent(
                 ) { enabled ->
                     viewModel.updateStreamSettings { s -> s.copy(browserClientMode = enabled) }
                 }
-                ChoiceRow(stringResource(R.string.settings_region), listOf(stringResource(R.string.option_auto)) + state.regions.map { it.name }, state.regions.firstOrNull { it.url == settings.stream.region }?.name ?: stringResource(R.string.option_auto)) { label ->
-                    val url = state.regions.firstOrNull { it.name == label }?.url.orEmpty()
+                val autoRegionLabel = stringResource(R.string.option_auto)
+                val regionChoices = streamRegionPickerEntries(state.regions)
+                ChoiceRow(
+                    stringResource(R.string.settings_region),
+                    listOf(autoRegionLabel) + regionChoices.map { it.label },
+                    regionChoices.firstOrNull { it.region.url == settings.stream.region }?.label ?: autoRegionLabel,
+                ) { label ->
+                    val url = regionChoices.firstOrNull { it.label == label }?.region?.url.orEmpty()
                     viewModel.updateStreamSettings { s -> s.copy(region = url) }
                 }
                 SettingSwitch(stringResource(R.string.settings_session_proxy), settings.stream.sessionProxyEnabled) { enabled ->
