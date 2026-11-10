@@ -142,7 +142,7 @@ internal fun recommendedAndroidStreamProfile(
         60
     }
     val bitrate = when {
-        lowPower -> if (fps <= 30) 12 else 18
+        lowPower -> if (fps <= 30) 12 else 14
         selected.height >= 2160 -> 75
         selected.height >= 1440 -> 45
         androidTvProfile -> 30

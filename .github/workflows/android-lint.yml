@@ -81,10 +81,17 @@ jobs:
       - name: Run Android lint
         working-directory: android
         env:
-          # The lint UAST/IDE analyzer exhausted its 4 GB heap; use a larger heap for the full analysis.
-          JAVA_TOOL_OPTIONS: -Xmx6g
+          # The public ubuntu-24.04 runner has 16 GB RAM; run lint in one large JVM.
+          JAVA_TOOL_OPTIONS: -Xmx10g
         run: |
           chmod +x ./gradlew
           export CMAKE="$ANDROID_SDK_ROOT/cmake/3.22.1/bin/cmake"
           test -x "$CMAKE"
-          ./gradlew --no-daemon --max-workers=1 --stacktrace :app:lintDebug
+
+          # Avoid heap competition between Gradle and a separate Kotlin compiler daemon.
+          sed -i 's/^org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx10g -Dfile.encoding=UTF-8/' gradle.properties
+          sed -i '/^kotlin.daemon.jvmargs=/d' gradle.properties
+          echo 'kotlin.compiler.execution.strategy=in-process' >> gradle.properties
+
+          free -h
+          ./gradlew --no-daemon --max-workers=1 --no-configuration-cache --stacktrace :app:lintDebug

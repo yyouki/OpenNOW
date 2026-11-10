@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version, for example 2.4.1-redmi14c.1
+        description: Release version, for example 2.3.8-redmi14c.1
         required: true
         type: string
       prerelease:
@@ -203,7 +203,7 @@ jobs:
             echo
             echo "- Source branch: `$GITHUB_REF_NAME`"
             echo "- Commit: `$GITHUB_SHA`"
-            echo "- Version code: 195"
+            echo "- Version code: 194"
             echo "- Status bar: optional SSID and local device time"
             echo "- Region picker: provider-advertised routes ranked by bounded TCP-connect measurements"
             echo "- Live packet loss/jitter: active WebRTC or NVST transport statistics"

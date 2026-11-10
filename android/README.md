@@ -45,7 +45,7 @@ Run `python3 scripts/check_translations.py` from this folder to check every supp
 
 Android streaming is capped at **120 FPS** in this client. The 120 FPS option remains gated by the account's Ultimate entitlement; the Android display also needs a 120 Hz refresh mode, and the provider must accept the requested stream profile. The client selects a cadence-compatible display mode when one is available.
 
-For the Redmi 14C, keep the automatic recommendation as the starting point: **H.264, approximately 720p ultrawide, 60 FPS, and 18 Mbps**. This stays below the display's advertised 120 Hz ceiling to preserve decoder and GPU headroom. 120 FPS is an optional experiment, not the recommended default; if decoded FPS falls behind received FPS, return to 60 FPS.
+For the Redmi 14C on the reported 72 Mbps Wi-Fi 4 link, keep the automatic recommendation as the starting point: **H.264, approximately 720p ultrawide, 60 FPS, and 14 Mbps**. The 14 Mbps cap leaves more headroom for Wi-Fi 4 airtime overhead and interference; 72 Mbps link rate is not the same as sustained application throughput. This stays below the display's advertised 120 Hz ceiling to preserve decoder and GPU headroom. 120 FPS is an optional experiment, not the recommended default; if decoded FPS falls behind received FPS, return to 60 FPS.
 
 The in-stream performance notice distinguishes measured network problems (latency, packet loss, jitter) from a sustained device video-decoding backlog. When incoming video is healthy but decoding falls behind, it recommends reducing resolution/FPS and disabling sharpening rather than blaming the network. It does not silently change saved settings.
 
@@ -104,18 +104,18 @@ physical-device verification. Source provenance and Android-specific differences
 
 The desktop Electron CI matrix ignores the `android-redmi14c` branch because that branch is an Android-native target. Desktop builds continue to run on their normal branches.
 
-The `android-redmi14c` branch has separate GitHub Actions workflows for APK builds and Android lint. The **Android APK** workflow runs unit tests, builds both `assembleDebug` and `assembleRelease`, signs/verifies the release APK, and uploads both APK artifacts. It no longer waits for lint, so a lengthy analysis cannot cancel APK publication. The **Android Lint** workflow runs `:app:lintDebug` on a separate runner with a 180-minute timeout and one Gradle worker. It is intentionally non-blocking for APK packaging.
+The `android-redmi14c` branch has separate GitHub Actions workflows for APK builds and Android lint. The **Android APK** workflow runs unit tests, builds both `assembleDebug` and `assembleRelease`, signs/verifies the release APK, and uploads both APK artifacts. It no longer waits for lint, so a lengthy analysis cannot cancel APK publication. The **Android Lint** workflow runs `:app:lintDebug` on a separate 16 GB public runner with a 180-minute timeout, one Gradle worker, a single 10 GB JVM, and app-source-only analysis. Unit tests remain covered by the APK workflow. It is intentionally non-blocking for APK packaging.
 
 To publish a GitHub Release, create and push a version tag from the `android-redmi14c` branch. For example:
 
 ```sh
 git checkout android-redmi14c
 git pull origin android-redmi14c
-git tag android-v2.4.1-redmi14c.1
-git push origin android-v2.4.1-redmi14c.1
+git tag android-v2.3.8-redmi14c.1
+git push origin android-v2.3.8-redmi14c.1
 ```
 
-The `android-v*` tag starts the **Android Release** workflow. It runs unit tests, builds and signs a versioned sideload APK, uploads the artifact, and publishes the GitHub Release. Full Android lint runs independently in the **Android Lint** workflow, so a long lint scan does not block a signed release. A hyphenated version (such as `2.4.1-redmi14c.1`) is marked as a prerelease.
+The `android-v*` tag starts the **Android Release** workflow. It runs unit tests, builds and signs a versioned sideload APK, uploads the artifact, and publishes the GitHub Release. Full Android lint runs independently in the **Android Lint** workflow, so a long lint scan does not block a signed release. A hyphenated version (such as `2.3.8-redmi14c.1`) is marked as a prerelease.
 
 ### Persistent APK signing
 

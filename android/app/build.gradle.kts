@@ -40,8 +40,8 @@ android {
         // target changes are audited; LAN access is permission-gated at its feature boundary.
         //noinspection EditedTargetSdkVersion
         targetSdk = 37
-        versionCode = 195
-        versionName = providers.gradleProperty("androidReleaseVersion").orElse("2.4.1").get()
+        versionCode = 194
+        versionName = providers.gradleProperty("androidReleaseVersion").orElse("2.3.8").get()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("boolean", "APK_UPDATES_SUPPORTED", "true")
@@ -111,6 +111,9 @@ android {
 
     lint {
         checkReleaseBuilds = false
+        // Keep the main lint pass focused on shipped app code and resources.
+        checkTestSources = false
+        checkGeneratedSources = false
     }
 }
 
