@@ -207,7 +207,7 @@ jobs:
             echo "- Status bar: optional SSID and local device time"
             echo "- Region picker: provider-advertised routes ranked by bounded TCP-connect measurements"
             echo "- Live packet loss/jitter: active WebRTC or NVST transport statistics"
-            echo "- Sideload APK signing: `$SIGNING_MODE`
+            echo "- Sideload APK signing: `$SIGNING_MODE`"
             echo "- APK SHA-256: `$(sha256sum "$APK" | cut -d ' ' -f 1)`"
             echo
             echo "The build runs Android unit tests and produces a signed sideload APK. Full Android lint runs separately in the Android Lint workflow to keep publishing independent of its long analysis time."
