@@ -222,6 +222,8 @@ class AndroidSetupFlowTest {
                 StreamStatusItem.Server,
                 StreamStatusItem.Latency,
                 StreamStatusItem.PacketLoss,
+                StreamStatusItem.Time,
+                StreamStatusItem.Ssid,
             ),
             StreamStatusItem.entries,
         )
