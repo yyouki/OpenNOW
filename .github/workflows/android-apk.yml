@@ -20,7 +20,7 @@ jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 60
 
     steps:
       - name: Checkout source
@@ -165,7 +165,7 @@ jobs:
             echo "| Debug | `app-debug.apk` | `$(sha256sum "$DEBUG_APK" | cut -d ' ' -f 1)` |"
             echo "| Release | `app-release.apk` | `$(sha256sum "$RELEASE_APK" | cut -d ' ' -f 1)` |"
             echo
-            echo "Unit tests and Android lint completed before packaging."
+            echo "Android unit tests passed; APKs were built, signed, and verified. Full Android lint runs in the separate Android Lint workflow."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload debug APK
@@ -186,10 +186,3 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      # Lint runs in a fresh, single-worker Gradle invocation after APK artifacts
-      # have been preserved. This avoids competing with R8 and Kotlin compilation.
-      - name: Run Android lint in an isolated Gradle invocation
-        working-directory: android
-        run: |
-          chmod +x ./gradlew
-          ./gradlew --no-daemon --max-workers=1 --stacktrace :app:lintDebug

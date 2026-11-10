@@ -6,7 +6,9 @@ on:
     branches:
       - dev
       - main
-  push: {}
+  push:
+    branches-ignore:
+      - android-redmi14c
 
 concurrency:
   group: ci-${{ github.ref }}

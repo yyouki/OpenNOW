@@ -1,0 +1,87 @@
+name: Android Lint
+
+on:
+  push:
+    branches:
+      - android-redmi14c
+    paths:
+      - "android/**"
+      - ".github/workflows/android-lint.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Do not cancel a long analysis because a later source push arrived.
+# GitHub keeps the active run and retains only the latest pending run in this group.
+concurrency:
+  group: android-lint-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  lint:
+    name: Android lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: |
+            android/gradle/wrapper/gradle-wrapper.properties
+            android/**/*.gradle.kts
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools
+
+      - name: Install Android SDK components
+        run: |
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-37.0" \
+            "build-tools;37.0.0" \
+            "ndk;27.2.12479018" \
+            "cmake;3.22.1"
+          # API 37 is installed as android-37.0; AGP resolves compileSdk 37 via android-37.
+          if [ ! -e "$ANDROID_SDK_ROOT/platforms/android-37" ]; then
+            ln -s android-37.0 "$ANDROID_SDK_ROOT/platforms/android-37"
+          fi
+          yes | sdkmanager --licenses
+
+      - name: Set up Rust and Android targets
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android,i686-linux-android
+
+      - name: Cache Rust dependencies and native build outputs
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            android/nvst/target
+          key: ${{ runner.os }}-android-nvst-${{ hashFiles('android/nvst/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-android-nvst-
+
+      - name: Run Android lint
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          export CMAKE="$ANDROID_SDK_ROOT/cmake/3.22.1/bin/cmake"
+          test -x "$CMAKE"
+          ./gradlew --no-daemon --max-workers=1 --stacktrace :app:lintDebug

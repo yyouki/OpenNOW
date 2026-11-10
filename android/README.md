@@ -102,7 +102,9 @@ physical-device verification. Source provenance and Android-specific differences
 
 ## Fork CI and Android Releases
 
-The `android-redmi14c` branch has a GitHub Actions workflow that runs Android unit tests and builds both `assembleDebug` and `assembleRelease`. APK packaging and `lintDebug` run in separate Gradle invocations; lint is limited to one worker to reduce memory pressure. Debug and signed sideload release APKs are uploaded before the isolated lint step, so a lint memory failure does not discard already-built APK artifacts.
+The desktop Electron CI matrix ignores the `android-redmi14c` branch because that branch is an Android-native target. Desktop builds continue to run on their normal branches.
+
+The `android-redmi14c` branch has separate GitHub Actions workflows for APK builds and Android lint. The **Android APK** workflow runs unit tests, builds both `assembleDebug` and `assembleRelease`, signs/verifies the release APK, and uploads both APK artifacts. It no longer waits for lint, so a lengthy analysis cannot cancel APK publication. The **Android Lint** workflow runs `:app:lintDebug` on a separate runner with a 180-minute timeout and one Gradle worker. It is intentionally non-blocking for APK packaging.
 
 To publish a GitHub Release, create and push a version tag from the `android-redmi14c` branch. For example:
 
@@ -113,7 +115,7 @@ git tag android-v2.3.8-redmi14c.1
 git push origin android-v2.3.8-redmi14c.1
 ```
 
-The `android-v*` tag starts the **Android Release** workflow. It runs unit tests, builds and signs a versioned sideload APK, uploads the artifact, then runs Android lint separately. GitHub Release publication occurs only after lint succeeds. The APK checksum is included with the release asset. A hyphenated version (such as `2.3.8-redmi14c.1`) is marked as a prerelease.
+The `android-v*` tag starts the **Android Release** workflow. It runs unit tests, builds and signs a versioned sideload APK, uploads the artifact, and publishes the GitHub Release. Full Android lint runs independently in the **Android Lint** workflow, so a long lint scan does not block a signed release. A hyphenated version (such as `2.3.8-redmi14c.1`) is marked as a prerelease.
 
 ### Persistent APK signing
 

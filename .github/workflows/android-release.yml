@@ -207,7 +207,7 @@ jobs:
             echo "- Sideload APK signing: `$SIGNING_MODE`"
             echo "- APK SHA-256: `$(sha256sum "$APK" | cut -d ' ' -f 1)`"
             echo
-            echo "The build runs Android unit tests and `lintDebug`, including route-discovery, region-routing, subscription parsing, and premium-membership regression tests."
+            echo "The build runs Android unit tests and produces a signed sideload APK. Full Android lint runs separately in the Android Lint workflow to keep publishing independent of its long analysis time."
             if [[ "$SIGNING_MODE" == "temporary-test-key" ]]; then
               echo
               echo "This sideload APK uses a temporary CI key. It is suitable for a first test install, but a later build cannot update it unless a persistent keystore is configured in repository Actions secrets. Otherwise uninstall the old CI-signed APK before installing a newly signed one."
@@ -226,14 +226,6 @@ jobs:
             android-release-notes.md
           if-no-files-found: error
           retention-days: 30
-
-      # Run lint alone after preserving the verified APK artifact.
-      - name: Run Android lint in an isolated Gradle invocation
-        working-directory: android
-        run: |
-          chmod +x ./gradlew
-          ./gradlew --no-daemon --max-workers=1 --stacktrace :app:lintDebug
-
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3
